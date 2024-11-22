@@ -1,0 +1,41 @@
+{
+  "name": "sdk-node",
+  "version": "1.0.0",
+  "description": "Node.js SDK for sending generations to GraphQL endpoint",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "codegen": "graphql-codegen --config codegen.yml",
+    "prepare": "npm run build",
+    "test": "node --no-warnings --experimental-vm-modules node_modules/.bin/jest",
+    "test:watch": "node --no-warnings --experimental-vm-modules node_modules/.bin/jest --watch",
+    "test:coverage": "node --no-warnings --experimental-vm-modules node_modules/.bin/jest --coverage"
+  },
+  "keywords": [
+    "graphql",
+    "sdk",
+    "typescript"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@apollo/client": "^3.11.10",
+    "@graphql-codegen/cli": "^5.0.3",
+    "@graphql-codegen/typescript": "^4.1.1",
+    "@graphql-codegen/typescript-operations": "^4.3.1",
+    "@graphql-codegen/typescript-react-apollo": "^4.3.2",
+    "@types/node": "^22.9.1",
+    "cross-fetch": "^4.0.0",
+    "graphql": "^16.9.0",
+    "typescript": "^5.6.3"
+  },
+  "devDependencies": {
+    "@graphql-codegen/near-operation-file-preset": "^3.0.0",
+    "@graphql-codegen/typescript-graphql-request": "^6.2.0",
+    "@types/jest": "^29.5.14",
+    "graphql-request": "^6.1.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.2.5"
+  }
+}
