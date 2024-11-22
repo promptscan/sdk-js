@@ -133,3 +133,4 @@ dist
 .visualstudio
 .DS_Store
 INSTRUCTIONS.md
+node_modules

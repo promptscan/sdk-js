@@ -1,9 +1,10 @@
 {
-  "name": "sdk-node",
-  "version": "1.0.0",
-  "description": "Node.js SDK for sending generations to GraphQL endpoint",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "name": "promptscan-sdk",
+  "version": "0.1.0",
+  "description": "JS SDK for sending generations to GraphQL endpoint",
+  "main": "dist/promptscan.js",
+  "types": "dist/promptscan.d.ts",
+  "licence": "MIT",
   "scripts": {
     "build": "tsc",
     "codegen": "graphql-codegen --config codegen.yml",
@@ -12,6 +13,10 @@
     "test:watch": "node --no-warnings --experimental-vm-modules node_modules/.bin/jest --watch",
     "test:coverage": "node --no-warnings --experimental-vm-modules node_modules/.bin/jest --coverage"
   },
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "keywords": [
     "graphql",
     "sdk",
