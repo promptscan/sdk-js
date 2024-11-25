@@ -42,7 +42,7 @@ describe('GraphQLClient', () => {
                 duration: 1.5,
                 timeToFirstToken: 0.2,
                 sessionId: 'test-session-1',
-                meta: [
+                tags: [
                     {key: 'source', value: 'test'},
                     {key: 'environment', value: 'development'}
                 ],

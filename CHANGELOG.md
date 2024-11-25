@@ -1,10 +1,10 @@
 # Changelog
 
 ### Added
-- N/A
+- debug mode for SDK
 
 ### Changed
-- initial version of SDK
+- N/A
 
 ### Deprecated
 - N/A

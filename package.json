@@ -1,6 +1,6 @@
 {
   "name": "promptscan-sdk",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "JS SDK for sending generations to GraphQL endpoint",
   "main": "dist/promptscan.js",
   "types": "dist/promptscan.d.ts",

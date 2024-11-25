@@ -14,7 +14,7 @@ export interface SDKConfig {
     autoFlush?: boolean;
     flushIntervalMillis?: number;
     maxRetries?: number;
-    defaultMeta?: Record<string, string>;
+    defaultTags?: Record<string, string>;
 }
 
 type GenerationRecord = {
@@ -30,7 +30,7 @@ export class PromptScanSDK {
         autoFlush: true,
         flushIntervalMillis: 5000,
         maxRetries: 3,
-        defaultMeta: {}
+        defaultTags: {}
     };
 
     public config: SDKConfig;
@@ -53,6 +53,10 @@ export class PromptScanSDK {
         this.config.apiKey = this.config.apiKey || process.env.PROMPTSCAN_API_KEY;
         this.config.baseUrl = this.config.baseUrl || process.env.PROMPTSCAN_BASE_URL || 'https://api.promptscan.ai/graphql/';
 
+        if (!this.config.apiKey) {
+            console.warn(`PromptScanSDK is initialized without API key.`)
+        }
+
         const clientConfig: GraphQLClientConfig = {
             baseUrl: this.config.baseUrl,
             apiKey: this.config.apiKey
@@ -63,6 +67,10 @@ export class PromptScanSDK {
         if (this.config.autoFlush && this.config.flushIntervalMillis) {
             this.setupAutoFlush();
         }
+
+        if (this.config.debug) {
+            console.debug(`PromptScanSDK is initialized. Collection enabled=${this.config.enabled} with autoFlush=${this.config.autoFlush}.`)
+        }
     }
 
     private setupAutoFlush(): void {
@@ -72,6 +80,9 @@ export class PromptScanSDK {
 
         this.timeoutId = setTimeout(
             async () => {
+                if (this.config.debug) {
+                    console.debug("Periodic flush.")
+                }
                 await this.flush();
                 this.setupAutoFlush();
             },
@@ -80,15 +91,11 @@ export class PromptScanSDK {
     }
 
     collect(generation: GenerationInput, projectApiKey?: string) {
-        if (!this.config.enabled) {
-            return;
+        if (this.config.debug) {
+            console.debug(`Adding generation record ${generation.id} to queue.`)
         }
 
         this.buffer.push({generation: generation, apiKey: projectApiKey, retries: 0});
-
-        if (this.config.debug) {
-            console.debug('Added generation to buffer', generation);
-        }
     }
 
     async flush(): Promise<GenerationInput[]> {
@@ -103,22 +110,33 @@ export class PromptScanSDK {
             generations.push(this.buffer.pop()!);
         }
 
+        if (!this.config.enabled) {
+            if (this.config.debug) {
+                console.debug(`Discarding ${generations.length} records since collection is disabled.`)
+            }
+            return [];
+        }
+
+        if (this.config.debug) {
+            console.debug(`Flushing ${generations.length} records.`)
+        }
+
         const generationsByApiKey = generations
             .filter((rec) => { return rec.retries < this.config.maxRetries! })
             .map((rec)=> {
-                let metaAsRecord = (rec.generation.meta || []).reduce((acc, p) => {
+                let tagsAsRecords = (rec.generation.tags || []).reduce((acc, p) => {
                     acc[p.key] = p.value;
                     return acc;
-                }, {...this.config.defaultMeta}) as Record<string, string>;
+                }, {...this.config.defaultTags}) as Record<string, string>;
 
-                let meta = Object
-                    .entries(metaAsRecord)
+                let tags = Object
+                    .entries(tagsAsRecords)
                     .map(([key, value]) => ({key: key, value: value}));
 
                 return {
                     ...rec,
                     generation: {
-                        ...rec.generation, meta: meta
+                        ...rec.generation, tags: tags
                     }
                 };
             } )
@@ -144,16 +162,18 @@ export class PromptScanSDK {
                         apiKey
                     );
                 retry = !result.collect.success;
-
-                if (result.collect.success) {
-                    flushedGenerations.push(...records.map(r => r.generation));
-                }
             } catch (error) {
-                retry = true
+                console.error("Failed to collect generations", error);
+                retry = true;
             }
 
             if (retry) {
                 this.buffer.push(...records.map(r => ({...r, retries: r.retries + 1})));
+                if (this.config.debug) {
+                    console.debug(`Adding ${records.length} records back to queue for retry.`)
+                }
+            } else {
+                flushedGenerations.push(...records.map(r => r.generation));
             }
         }
 
@@ -162,9 +182,14 @@ export class PromptScanSDK {
 
     async close(): Promise<void> {
         if (this.isClosed) {
+            console.warn("PromptScanSDK is already closed.");
             return;
         }
         this.isClosed = true;
+
+        if (this.config.debug) {
+            console.debug("Closing PromptScanSDK.");
+        }
 
         if (this.timeoutId) {
             clearInterval(this.timeoutId);
@@ -173,6 +198,10 @@ export class PromptScanSDK {
 
         await this.flush();
         await this.graphQLClient!.close();
+
+        if (this.config.debug) {
+            console.debug("PromptScanSDK is closed.");
+        }
     }
 
     estimateGenerationsInFlightCount(): number {
@@ -181,5 +210,9 @@ export class PromptScanSDK {
 
     setEnabled(enabled: boolean): void {
         this.config.enabled = enabled;
+    }
+
+    setDebug(debug: boolean): void {
+        this.config.debug = debug;
     }
 }

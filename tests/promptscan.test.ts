@@ -33,7 +33,7 @@ describe('PromptScanSDK', () => {
         duration: null,
         timeToFirstToken: null,
         sessionId: null,
-        meta: null,
+        tags: null,
         usage: {
             promptTokens: null,
             completionTokens: null,
@@ -92,7 +92,7 @@ describe('PromptScanSDK', () => {
             .mockResolvedValueOnce({collect: {success: false, error: {message: 'some error'}}})
             .mockResolvedValueOnce({collect: {success: true, error: null}});
 
-        const sdk = new PromptScanSDK({...config, autoFlush: false});
+        const sdk = new PromptScanSDK({...config, autoFlush: false, debug: true});
 
         sdk.collect({...generation, id: 'a'});
         expect(sdk.estimateGenerationsInFlightCount()).toBe(1);
@@ -112,16 +112,16 @@ describe('PromptScanSDK', () => {
 
     it('it should add default meta to generation', async () => {
         const sdk = new PromptScanSDK({
-            ...config, autoFlush: false, defaultMeta: {'version': '1.0', 'env': 'test'}
+            ...config, autoFlush: false, defaultTags: {'version': '1.0', 'env': 'test'}
         });
         sdk.collect({
             ...generation,
             id: 'a',
-            meta: [{key: 'version', value: '2.0'}, {key: 'app', value: 'demo'}],
+            tags: [{key: 'version', value: '2.0'}, {key: 'app', value: 'demo'}],
         });
         let generations = await sdk.flush();
 
-        let meta = generations[0].meta?.reduce((acc, p) => {
+        let meta = generations[0].tags?.reduce((acc, p) => {
             acc[p.key as string] = p.value;
             return acc;
         }, {} as Record<string, string>);
@@ -146,6 +146,9 @@ describe('PromptScanSDK', () => {
     it('it should support enable / disable', async() => {
         const sdk = new PromptScanSDK({...config, autoFlush: false, enabled: false});
         sdk.collect({...generation, id: 'a'});
+        expect(sdk.estimateGenerationsInFlightCount()).toBe(1);
+        const res = await sdk.flush()
+        expect(res).toEqual([]);
         expect(sdk.estimateGenerationsInFlightCount()).toBe(0);
     });
 });

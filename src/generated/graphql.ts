@@ -269,24 +269,22 @@ export type GenerationFeature = {
   explanation: Maybe<Scalars['String']['output']>;
   generation: Generation;
   locations: Maybe<Array<EntityLocation>>;
-  /** @deprecated No longer supported */
   name: Scalars['String']['output'];
-  outputName: Scalars['String']['output'];
-  outputType: Scalars['String']['output'];
   processingDurationSeconds: Maybe<Scalars['Float']['output']>;
   processingTs: Maybe<Scalars['DateTime']['output']>;
+  type: Scalars['String']['output'];
   value: Scalars['StringOrNumber']['output'];
 };
 
 export type GenerationFeatureFilterInput = {
   hasTagKeys: InputMaybe<Array<Scalars['String']['input']>>;
-  outputName: InputMaybe<Scalars['String']['input']>;
-  outputValues: InputMaybe<Array<Scalars['StringOrNumber']['input']>>;
+  name: InputMaybe<Scalars['String']['input']>;
   projectIds: InputMaybe<Array<Scalars['UUID']['input']>>;
   query: InputMaybe<Scalars['String']['input']>;
   relativeTimeDelta: InputMaybe<Scalars['String']['input']>;
   semanticGroupIds: InputMaybe<Array<Scalars['UUID']['input']>>;
   tags: InputMaybe<Array<KeyValuePairInput>>;
+  values: InputMaybe<Array<Scalars['StringOrNumber']['input']>>;
 };
 
 export type GenerationFeatureResultPage = {
@@ -296,10 +294,10 @@ export type GenerationFeatureResultPage = {
 
 export type GenerationFeatureSpec = {
   detectors: Maybe<Array<Detector>>;
-  outputName: Scalars['String']['output'];
-  outputType: Scalars['String']['output'];
+  name: Scalars['String']['output'];
   project: Project;
   stats: Array<StatsMetric>;
+  type: Scalars['String']['output'];
 };
 
 
@@ -331,9 +329,9 @@ export type GenerationInput = {
   duration: InputMaybe<Scalars['Float']['input']>;
   id: InputMaybe<Scalars['String']['input']>;
   messages: Array<GenerationMessageInput>;
-  meta: InputMaybe<Array<KeyValuePairInput>>;
   model: Scalars['String']['input'];
   sessionId: InputMaybe<Scalars['String']['input']>;
+  tags: InputMaybe<Array<KeyValuePairInput>>;
   timeToFirstToken: InputMaybe<Scalars['Float']['input']>;
   usage: InputMaybe<UsageInput>;
 };
@@ -359,14 +357,35 @@ export type GenerationMessageInput = {
   tags: InputMaybe<Array<KeyValuePairInput>>;
 };
 
+export type GenerationModelFilterInput = {
+  projectIds: InputMaybe<Array<Scalars['UUID']['input']>>;
+  relativeTimeDelta: Scalars['String']['input'];
+};
+
+export type GenerationModelResultPage = {
+  items: Array<Scalars['String']['output']>;
+  pageInfo: Maybe<PageInfo>;
+};
+
 export type GenerationResultPage = {
   items: Array<Generation>;
   pageInfo: Maybe<PageInfo>;
 };
 
+export type GenerationTagFilterInput = {
+  key: InputMaybe<Scalars['String']['input']>;
+  projectIds: InputMaybe<Array<Scalars['UUID']['input']>>;
+  relativeTimeDelta: Scalars['String']['input'];
+};
+
 export type GenerationTagGroupDimension =
   | 'key'
   | 'value';
+
+export type GenerationTagResultPage = {
+  items: Array<KeyValuePair>;
+  pageInfo: Maybe<PageInfo>;
+};
 
 export type GenerationUsage = {
   completionTokens: Maybe<Scalars['Int']['output']>;
@@ -382,6 +401,11 @@ export type Issue = {
   processingTs: Scalars['DateTime']['output'];
   severity: Severity;
   tags: Maybe<Array<KeyValuePair>>;
+};
+
+export type IssueCategoryResultPage = {
+  items: Array<Scalars['String']['output']>;
+  pageInfo: Maybe<PageInfo>;
 };
 
 export type IssueFilterInput = {
@@ -827,9 +851,12 @@ export type Query = {
   generationFeatureSpecs: GenerationFeatureSpecResultPage;
   generationFeatures: Maybe<GenerationFeatureResultPage>;
   generationFeaturesStats: Maybe<Array<StatsMetric>>;
+  generationModels: GenerationModelResultPage;
   generationStats: Maybe<Array<StatsMetric>>;
+  generationTags: GenerationTagResultPage;
   generations: GenerationResultPage;
   issue: Maybe<Issue>;
+  issueCategories: IssueCategoryResultPage;
   issues: IssueResultPage;
   issuesStats: Maybe<Array<StatsMetric>>;
   policies: Maybe<PolicyResultPage>;
@@ -841,7 +868,6 @@ export type Query = {
   semanticGroups: SemanticGroupResultPage;
   suggestDetectorSpec: Maybe<DetectorSuggestion>;
   suggestPolicyEvaluationRecords: Scalars['Data']['output'];
-  tags: MetricResultPage;
   user: Maybe<User>;
   users: UserResultPage;
   whoami: User;
@@ -900,11 +926,23 @@ export type QueryGenerationFeaturesStatsArgs = {
 };
 
 
+export type QueryGenerationModelsArgs = {
+  filterBy: InputMaybe<GenerationModelFilterInput>;
+  page: InputMaybe<PageInput>;
+};
+
+
 export type QueryGenerationStatsArgs = {
   dimensions: Array<GenerationGroupDimension>;
   filterBy: InputMaybe<GenerationFilterInput>;
   granularity?: DateTimeGranularity;
   maxMetricsPerPeriod?: Scalars['Int']['input'];
+};
+
+
+export type QueryGenerationTagsArgs = {
+  filterBy: InputMaybe<GenerationTagFilterInput>;
+  page: InputMaybe<PageInput>;
 };
 
 
@@ -916,6 +954,12 @@ export type QueryGenerationsArgs = {
 
 export type QueryIssueArgs = {
   issueId: Scalars['UUID']['input'];
+};
+
+
+export type QueryIssueCategoriesArgs = {
+  filterBy: InputMaybe<IssueFilterInput>;
+  page: InputMaybe<PageInput>;
 };
 
 
@@ -980,13 +1024,6 @@ export type QuerySuggestDetectorSpecArgs = {
 
 export type QuerySuggestPolicyEvaluationRecordsArgs = {
   policyId: Scalars['UUID']['input'];
-};
-
-
-export type QueryTagsArgs = {
-  dimensions: Array<GenerationTagGroupDimension>;
-  filterBy: InputMaybe<TagFilterInput>;
-  page: InputMaybe<PageInput>;
 };
 
 
@@ -1055,11 +1092,6 @@ export type StatsMetricDimension = {
   dimension: Scalars['String']['output'];
   name: Scalars['String']['output'];
   value: Scalars['String']['output'];
-};
-
-export type TagFilterInput = {
-  projectIds: InputMaybe<Array<Scalars['UUID']['input']>>;
-  relativeTimeDelta: InputMaybe<Scalars['String']['input']>;
 };
 
 export type Tenant = {
